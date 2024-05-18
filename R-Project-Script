@@ -1,0 +1,306 @@
+#RICA database project 2024 Clement B, Salomé D, Jeanne H 
+
+#Port the excel file
+
+# Install readxl 
+install.packages("readxl")
+
+# readxl package
+library(readxl)
+
+# Replace "file_path.xlsx" with the path to your Excel file
+data <- read_excel("C:/Users/cleme/Downloads/RICA_isafe_students_vf.xlsx")
+
+# Read the first sheet of the Excel file
+data <- read_excel("C:/Users/cleme/Downloads/RICA_isafe_students_vf.xlsx", sheet = 1)
+
+#Get the farms from normandie 
+normandie <- data[data$NREG == 28, ]
+
+#Get the farms from brittany 
+bretagne <- data[data$NREG == 53, ]
+
+###################################################################################################################
+
+
+# Count number of famrs in Bretagne
+count_bretagne <- sum(data$NREG == 53)
+
+# get the result 
+print(count_bretagne)
+
+# Count number of farms in normandie
+count_normandie <- sum(data$NREG == 28)
+
+# Print the result
+print(count_normandie)
+
+# pie chart
+pie(x = c(count_normandie, count_bretagne),
+    labels = c("Normandie", "Bretagne"),
+    col = c("lightblue", "lightgreen"),
+    main = "Number of Farms in Normandie vs Bretagne")
+
+
+# contigency table 
+contingency_table <- matrix(c(28, 53), nrow = 1, dimnames = list(NULL, c("Normandie", "Bretagne")))
+
+# chi square test 
+chi_square_result <- chisq.test(contingency_table)
+
+# extract p value 
+p_value <- chi_square_result$p.value
+
+# Compare the p-value to the desired significance level (0.05)
+if (p_value < 0.05) {
+  print("Reject the null hypothesis, There is therefore a significant difference in the distribution of farms between Normandie and Bretagne.")
+} else {
+  print("Fail to reject the null hypothesis, There is therefore no significant difference in the distribution of farms between Normandie and Bretagne.")
+}
+
+# get p value
+print(p_value)
+
+###################################################################################################################
+
+# Descriptive statistics for UGBBO in normandie 
+normandie_stats_UGBBO <- summary(normandie$UGBBO)
+normandie_mean_UGBBO <- mean(normandie$UGBBO)
+normandie_median_UGBBO <- median(normandie$UGBBO)
+normandie_sd_UGBBO <- sd(normandie$UGBBO)
+normandie_min_UGBBO <- min(normandie$UGBBO)
+normandie_max_UGBBO <- max(normandie$UGBBO)
+
+# Descriptive statistics for the UGBBO in bretagne 
+bretagne_stats_UGBBO <- summary(bretagne$UGBBO)
+bretagne_mean_UGBBO <- mean(bretagne$UGBBO)
+bretagne_median_UGBBO <- median(bretagne$UGBBO)
+bretagne_sd_UGBBO <- sd(bretagne$UGBBO)
+bretagne_min_UGBBO <- min(bretagne$UGBBO)
+bretagne_max_UGBBO <- max(bretagne$UGBBO)
+
+
+# Perform t-test for UGBBO between Normandie and Bretagne
+t_test_result <- t.test(normandie$UGBBO, bretagne$UGBBO)
+
+# Get the p-value 
+p_value <- t_test_result$p.value
+
+# Print the result
+print(t_test_result)
+
+# Check p value if = to 0.05
+if (p_value <= 0.05) {
+  print("Reject the null hypothesis: There is a significant difference in the mean UGBBO between Normandie and Bretagne.")
+} else {
+  print("Fail to reject the null hypothesis: There is no significant difference in the mean UGBBO between Normandie and Bretagne.")
+}
+
+print(p_value)
+
+
+# Create box plots for the UGBBO for normandie and bretagne 
+boxplot(normandie$UGBBO, bretagne$UGBBO, 
+        main = "Boxplot of UGBBO in Normandie and Bretagne",
+        names = c("normandie", "bretagne"),
+        ylab = "UGBBO values")
+
+
+###################################################################################################################
+
+#convert char values into numerical 
+normandie$UTATO <- as.numeric(normandie$UTATO)
+bretagne$UTATO <- as.numeric(bretagne$UTATO)
+
+# verify if there are NA values 
+sum(is.na(normandie$UTATO))
+sum(is.na(bretagne$UTATO))
+
+# desc stats 
+normandie_stats_UTATO <- summary(normandie$UTATO)      # ignore NA values 
+normandie_median_UTATO <- median(normandie$UTATO, na.rm = TRUE)
+normandie_sd_UTATO <- sd(normandie$UTATO, na.rm = TRUE)
+normandie_min_UTATO <- min(normandie$UTATO, na.rm = TRUE)
+normandie_max_UTATO <- max(normandie$UTATO, na.rm = TRUE)
+
+bretagne_stats_UTATO <- summary(bretagne$UTATO)
+bretagne_mean_UTATO <- mean(bretagne$UTATO, na.rm = TRUE)
+bretagne_median_UTATO <- median(bretagne$UTATO, na.rm = TRUE)
+bretagne_sd_UTATO <- sd(bretagne$UTATO, na.rm = TRUE)
+bretagne_min_UTATO <- min(bretagne$UTATO, na.rm = TRUE)
+bretagne_max_UTATO <- max(bretagne$UTATO, na.rm = TRUE)
+
+# dataframe for the desc stats 
+stats_df <- data.frame(
+  Region = c("Normandie", "Brittany"),
+  Mean = c(normandie_mean_UTATO, bretagne_mean_UTATO),
+  Median = c(normandie_median_UTATO, bretagne_median_UTATO),
+  SD = c(normandie_sd_UTATO, bretagne_sd_UTATO),
+  Min = c(normandie_min_UTATO, bretagne_min_UTATO),
+  Max = c(normandie_max_UTATO, bretagne_max_UTATO)
+  )
+
+#port ggplot 
+library(ggplot2)
+
+# Create the barplot
+barplot <- ggplot(stats_df, aes(x = Region)) +
+  geom_bar(aes(y = Mean), fill = "lightblue", stat = "identity", position = "dodge") +
+  geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), width = 0.2, position = position_dodge(width = 0.9)) +
+  geom_point(aes(y = Median), shape = 21, fill = "white", color = "blue", size = 3, position = position_dodge(width = 0.9)) +
+  geom_errorbar(aes(ymin = Median, ymax = Median), width = 0.2, color = "blue", position = position_dodge(width = 0.9)) +
+  labs(title = "Comparison of UTATO between Normandie and Brittany",
+       y = "UTATO",
+       fill = "Region") +
+  theme_minimal()
+
+# Barplot 
+print(barplot)
+
+
+# Perform Shapiro-Wilk test for UTATO in Normandie
+shapiro_normandie <- shapiro.test(normandie$UTATO)
+
+# Print the result
+print(shapiro_normandie)
+
+# Check if the p-value is less than or equal to 0.05
+if (shapiro_normandie$p.value <= 0.05) {
+  print("Reject the null hypothesis: UTATO in Normandie is not normally distributed.")
+} else {
+  print("Fail to reject the null hypothesis: UTATO in Normandie is normally distributed.")
+}
+
+# Perform Shapiro-Wilk test for UTATO in Bretagne
+shapiro_bretagne <- shapiro.test(bretagne$UTATO)
+
+# Print the result
+print(shapiro_bretagne)
+
+# Check if the p-value is less than or equal to 0.05
+if (shapiro_bretagne$p.value <= 0.05) {
+  print("Reject the null hypothesis: UTATO in Bretagne is not normally distributed.")
+} else {
+  print("Fail to reject the null hypothesis: UTATO in Bretagne is normally distributed.")
+}
+
+
+###########################################################################################################################
+
+# Descriptive statistics for SAFER in normandie 
+normandie_stats_SAFER <- summary(normandie$SAFER)
+normandie_mean_SAFER <- mean(normandie$SAFER)
+normandie_median_SAFER <- median(normandie$SAFER)
+normandie_sd_SAFER <- sd(normandie$SAFER)
+normandie_min_SAFER <- min(normandie$SAFER)
+normandie_max_SAFER <- max(normandie$SAFER)
+
+# Descriptive statistics for the SAFER in bretagne 
+bretagne_stats_SAFER <- summary(bretagne$SAFER)
+bretagne_mean_SAFER <- mean(bretagne$SAFER)
+bretagne_median_SAFER <- median(bretagne$SAFER)
+bretagne_sd_SAFER <- sd(bretagne$SAFER)
+bretagne_min_SAFER <- min(bretagne$SAFER)
+bretagne_max_SAFER <- max(bretagne$SAFER)
+
+install.packages("gridExtra") #better vis 
+
+library(ggplot2) #load ggplot 
+
+# Create histograms for SAFER index in normandie and bretagne
+hist_normandie <- ggplot(data = normandie, aes(x = SAFER)) +
+  geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+  labs(title = "Histogram of SAFER in Normandie", x = "SAFER", y = "Frequency") +
+  theme_minimal()
+
+hist_bretagne <- ggplot(data = bretagne, aes(x = SAFER)) +
+  geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+  labs(title = "Histogram of SAFER in Bretagne", x = "SAFER", y = "Frequency") +
+  theme_minimal()
+
+# Combine the histograms into one 
+library(gridExtra)
+grid.arrange(hist_normandie, hist_bretagne, ncol = 2)
+
+
+
+
+###########################################################################################################################
+
+
+#convert char values into numerical 
+normandie$CHAFF <- as.numeric(normandie$CHAFF)
+bretagne$CHAFF <- as.numeric(bretagne$CHAFF)
+
+
+# verify if there are NA values 
+sum(is.na(normandie$CHAFF))
+sum(is.na(bretagne$CHAFF))
+
+# desc stats 
+normandie_stats_CHAFF <- summary(normandie$CHAFF)
+normandie_mean_CHAFF <- mean(normandie$CHAFF, na.rm = TRUE)  # ignore NA values 
+normandie_median_CHAFF <- median(normandie$CHAFF, na.rm = TRUE)
+normandie_sd_CHAFF <- sd(normandie$CHAFF, na.rm = TRUE)
+normandie_min_CHAFF <- min(normandie$CHAFF, na.rm = TRUE)
+normandie_max_CHAFF <- max(normandie$CHAFF, na.rm = TRUE)
+
+bretagne_stats_CHAFF <- summary(bretagne$CHAFF)
+bretagne_mean_CHAFF <- mean(bretagne$CHAFF, na.rm = TRUE)
+bretagne_median_CHAFF <- median(bretagne$CHAFF, na.rm = TRUE)
+bretagne_sd_CHAFF <- sd(bretagne$CHAFF, na.rm = TRUE)
+bretagne_min_CHAFF <- min(bretagne$CHAFF, na.rm = TRUE)
+bretagne_max_CHAFF <- max(bretagne$CHAFF, na.rm = TRUE)
+
+
+# Load the ggplot2 library if not already loaded
+library(ggplot2)
+
+# Create a data frame with aggregated CHAFF values for Normandie and Bretagne
+agg_data <- data.frame(
+  Region = c("Normandie", "Bretagne"),
+  CHAFF = c(mean(normandie$CHAFF, na.rm = TRUE), mean(bretagne$CHAFF, na.rm = TRUE))
+)
+
+# Create the stacked bar chart
+ggplot(agg_data, aes(x = Region, y = CHAFF, fill = Region)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Stacked Bar Chart of CHAFF for Normandie and Bretagne",
+       x = "Region", y = "Average CHAFF") +
+  scale_fill_manual(values = c("Normandie" = "blue", "Bretagne" = "red")) +
+  theme_minimal()
+
+
+# Perform Shapiro-Wilk test for CHAFF in Normandie
+shapiro_CHAFFnormandie <- shapiro.test(normandie$CHAFF)
+
+# Print the result
+print(shapiro_CHAFFnormandie)
+
+# Check if the p-value is less than or equal to 0.05
+if (shapiro_CHAFFnormandie$p.value <= 0.05) {
+  print("Reject the null hypothesis: CHAFF in Normandie is not normally distributed.")
+} else {
+  print("Fail to reject the null hypothesis: CHAFF in Normandie is normally distributed.")
+}
+
+# Perform Shapiro-Wilk test for CHAFF in Bretagne
+shapiro_CHAFFbretagne <- shapiro.test(bretagne$CHAFF)
+
+
+# Print the result
+print(shapiro_CHAFFbretagne)
+
+# Check if the p-value is less than or equal to 0.05
+if (shapiro_CHAFFbretagne$p.value <= 0.05) {
+  print("Reject the null hypothesis: CHAFF in Bretagne is not normally distributed.")
+} else {
+  print("Fail to reject the null hypothesis: CHAFF in Bretagne is normally distributed.")
+}
+
+# fisher test for both var 
+fisher_test <- var.test(normandie$CHAFF, bretagne$CHAFF)
+print("Fisher test for equality of variances:")
+print(fisher_test)
+
+
